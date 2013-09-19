@@ -1,0 +1,11 @@
+#!/bin/bash
+
+users=(000581357 000526758 000058418) 
+passwords=(ZV0VSDKS 19JSAQ5M S33TK41K)
+
+echo ${users[0]}
+echo ${passwords[0]}
+echo ${users[1]}
+echo ${passwords[1]}
+echo ${users[2]}
+echo ${passwords[2]}
