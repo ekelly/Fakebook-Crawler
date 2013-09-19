@@ -199,6 +199,7 @@ def main():
     
     while len(to_visit) > 0:
         path = to_visit.popleft()
+        visited.add(path)
         (header, body) = get(path)
         store_cookies(header)
         status = header["response_code"]
