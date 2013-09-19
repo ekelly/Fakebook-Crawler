@@ -135,7 +135,7 @@ def form_encode(form_data):
     for key,value in form_data.items():
         if len(ret):
             ret += "&"
-        ret += "%s=%s"
+        ret += "%s=%s" % (key.replace(" ", "+"),value.replace(" ", "+"))
 
 # Socket String String Dict String -> HTTPResponse
 # Send a POST for the specified url path with the specified form data
