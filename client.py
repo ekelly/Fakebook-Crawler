@@ -4,6 +4,9 @@ from optparse import OptionParser
 import socket
 import ssl
 
+FAKEBOOK_HOST = "cs5700.ccs.neu.edu"
+FAKEBOOK_HOME = "/accounts/login/?next=/fakebook/"
+
 # Parse the commandline input into a map of 
 # name to values
 def parse_input():
@@ -42,17 +45,28 @@ def recv_data(socket):
 def send_data(socket, data):
     return socket.send(data)
 
+# Create a GET request for the specified url path
+def http_get(host, path):
+    header =  "GET %s HTTP/1.1\n" % path
+    header += "Host: %s\n" % host
+    header += "\n"
+    print header
+    return header
+
 # Entry point to the program
 def main():
     args = parse_input()
 
     # Create a connection to the server
-    socket = open_socket(args.server, args.port, args.ssl)
+    socket = open_socket(FAKEBOOK_HOST, 80, False)
+    
+    sent_bytes = send_data(socket, http_get(FAKEBOOK_HOST, FAKEBOOK_HOME))
 
     # Listen for data and respond appropriately
-    response = parse_data(recv_data(socket))
+    response = recv_data(socket)
     while response:
-        response = None
+        print response
+        response = recv_data(socket)
 
     # not necessary, but nice to close the socket
     close_socket(socket)
