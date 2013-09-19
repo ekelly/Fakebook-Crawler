@@ -128,7 +128,7 @@ def form_encode(form_data):
     for key,value in form_data.items():
         if len(ret):
             ret += "&"
-        ret += "%s=%s"
+        ret += "%s=%s" % (key.replace(" ", "+"),value.replace(" ", "+"))
 
 # Send a POST for the specified url path with the specified form data
 def http_post(socket, host, path, form_data, cookies=""):
@@ -154,7 +154,6 @@ def wrap_post(socket):
 def do_login():
     login_page = http_get(socket, FAKEBOOK_HOST, FAKEBOOK_HOME)
     print login_page
-
 
 # Entry point to the program
 def main():
