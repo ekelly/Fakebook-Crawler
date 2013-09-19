@@ -1,8 +1,26 @@
 #!/usr/bin/python
 
 from optparse import OptionParser 
+from collections import deque
 import socket
 import ssl
+
+# A HTTPResponse is a:
+# (HTTPHeader, HTML)
+
+# A HTTPHeader is a map
+# {"HTTP fieldname": ["<field value>"]
+#  "HTTP fieldname": ["<value1", "value2"]
+#   ...
+# }
+
+# A HTML is a String
+
+
+to_visit = deque()
+visited = set()
+
+# .append() and .popleft() [to_visit]
 
 FAKEBOOK_HOST = "cs5700.ccs.neu.edu"
 FAKEBOOK_HOME = "/accounts/login/?next=/fakebook/"
@@ -11,6 +29,13 @@ cookie_store = {
     'csrftoken': None,
     'sessionid': None
 }
+
+# HTTPResponse -> 
+# Given an HTTPResponse, store the cookie values
+def store_cookies(response):
+    cookies = response["Set-cookie:"]
+    for i in cookies:
+        store_cookie(cookies[i])
 
 # Store a Fakebook cookie
 # String -> 
@@ -23,7 +48,7 @@ def store_cookie(cookie):
 
 # Retrieve the cookies
 # -> String
-def retrieve_cookie():
+def retrieve_cookies():
     global cookie_store
     cookie_str = ""
     for i in cookie_store:
@@ -46,10 +71,8 @@ def parse_input():
     return options
 
 # Open a socket to the server
-def open_socket(server, port, use_ssl):
+def open_socket(server, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    if use_ssl:
-        s = ssl.wrap_socket(s)
     s.settimeout(5)
     s.connect((server, port))
     return s
@@ -84,9 +107,11 @@ def parse_header(data):
     return header
 
 # Create a GET request for the specified url path
-def http_get(socket, host, path, cookies=[]):
+def http_get(socket, host, path, cookies=""):
     header =  "GET %s HTTP/1.1\n" % path
     header += "Host: %s\n" % host
+    if cookies != "":
+        header += "Cookies: %s\n" % cookies 
     header += "\n"
 
     sent_bytes = send_data(socket, header)
@@ -97,21 +122,57 @@ def http_get(socket, host, path, cookies=[]):
 
     return (header, body)
 
+# Wrap the socket to allow for easy sending
+# Socket -> [String -> ]
+def wrap_get(socket):
+    return lambda path:
+        return http_get(socket, FAKEBOOK_HOST, path, retrieve_cookies()))
+
+
+def do_login():
+    login_page = http_get(socket, FAKEBOOK_HOST, FAKEBOOK_HOME)
+    print login_page
+
+
 # Entry point to the program
 def main():
     args = parse_input()
 
     # Create a connection to the server
-    socket = open_socket(FAKEBOOK_HOST, 80, False)
+    socket = open_socket(FAKEBOOK_HOST, 80)
+    get = wrap_get(socket)    
+
+    if not do_login(socket):
+       print "Could not login" 
+       exit(0)
     
-
-    login_page = http_get(socket, FAKEBOOK_HOST, FAKEBOOK_HOME)
-    print login_page
-
-    # Listen for data and respond appropriately
+    while len(to_visit) > 0:
+        path = to_visit.popleft()
+        (header, body) = get(path)
+        status = header["resp_code"]
+        if status == "200":
+            parse_body(body)
+        elif status == "301":
+            handle_redirect(header, body)
+        elif status == "500":
+            to_visit.append(path)
 
     # not necessary, but nice to close the socket
     close_socket(socket)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # These 2 lines allow us to import this file into another file 
 # and test individual components without running it
