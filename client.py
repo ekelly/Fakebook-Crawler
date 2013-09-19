@@ -22,6 +22,7 @@ visited = set()
 
 FAKEBOOK_HOST = "cs5700.ccs.neu.edu"
 FAKEBOOK_HOME = "/accounts/login/?next=/fakebook/"
+FAKEBOOK_LOGIN = "/accounts/login/"
 
 cookie_store = {
     'csrftoken': None,
@@ -128,21 +129,61 @@ def http_get(socket, host, path, cookies=""):
 
     return (header, body)
 
-# Socket -> [String -> ]
+# Convert map into form encoded key=value string
+def form_encode(form_data):
+    ret = ""
+    for key,value in form_data.items():
+        if len(ret):
+            ret += "&"
+        ret += "%s=%s"
+
+# Socket String String Dict String -> HTTPResponse
+# Send a POST for the specified url path with the specified form data
+def http_post(socket, host, path, form_data, cookies=""):
+    encoded = form_encode(form_data)
+    header = "POST %s HTTP/1.1\n" % path
+    header += "Content-Type: application/x-www-form-urlencoded\n"
+    header += "Content-Length: %d\n" % len(encoded)
+    header += "\n"
+    header += encoded
+
+    sent_bytes = send_data(socket, header)
+
+    response = split_http(recv_data(socket))
+    header = parse_header(response[0])
+    body = response[1]
+
+    return (header, body)
+
+# Socket -> [String -> HTTPResponse]
 # Wrap the socket to allow for easy sending
 def wrap_get(socket):
-    return lambda path:
-        return http_get(socket, FAKEBOOK_HOST, path, retrieve_cookies()))
+    return lambda path: http_get(socket, FAKEBOOK_HOST, path, retrieve_cookies())
 
+# Socket -> [String Dict -> HTTPResponse]
+# Wrap the socket to allow for easy sending
+def wrap_post(socket):
+    return lambda path, form_data: http_post(socket, FACEBOOK_HOST, path, form_data, retrieve_cookies())
+    
 # Login
 # Socket ->
-def do_login(socket):
+def do_login(socket, username, password):
+    global to_visit
     get = wrap_get(socket)
+    post = wrap_post(socket)
     (header, login_page) = get(FAKEBOOK_HOME)
     store_cookies(header)
     token = parse_token()
-
-    print login_page
+    (header, body) = post(FAKEBOOK_LOGIN, {
+        "csrftoken": token, 
+        "next": "/fakebook/", 
+        "username": username, 
+        "password": password 
+    })
+    success = header["response_code"]["status"] != "500"
+    if success:
+        to_visit.append(header["location"])
+    return success
 
 # Entry point to the program
 def main():
@@ -152,7 +193,7 @@ def main():
     socket = open_socket(FAKEBOOK_HOST, 80)
     get = wrap_get(socket)    
 
-    if not do_login(socket):
+    if not do_login(socket, args["username"], args["password"]):
        print "Could not login" 
        exit(0)
     
