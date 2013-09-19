@@ -4,6 +4,31 @@ from optparse import OptionParser
 import socket
 import ssl
 
+cookie_store = {
+    'csrftoken': None,
+    'sessionid': None
+}
+
+# Store a Fakebook cookie
+# String -> 
+def store_cookie(cookie):
+    global cookie_store
+    if 'name=csrftoken' in cookie:
+        cookie_store["csrftoken"] = cookie
+    elif 'name=sessionid' in cookie:
+        cookie_store["sessionid"] = cookie
+
+# Retrieve the cookies
+# -> String
+def retrieve_cookie():
+    global cookie_store
+    cookie_str = ""
+    for i in cookie_store:
+        if cookie_store[i]:
+            cookie_str += cookie_store[i]
+            cookie_str += "; "
+    return cookie_str
+
 # Parse the commandline input into a map of 
 # name to values
 def parse_input():
