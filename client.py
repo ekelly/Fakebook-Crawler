@@ -3,7 +3,6 @@
 from optparse import OptionParser 
 from collections import deque
 import socket
-import ssl
 
 # A HTTPResponse is a:
 # (HTTPHeader, HTML)
@@ -15,7 +14,6 @@ import ssl
 # }
 
 # A HTML is a String
-
 
 to_visit = deque()
 visited = set()
@@ -30,10 +28,18 @@ cookie_store = {
     'sessionid': None
 }
 
-# HTTPResponse -> 
-# Given an HTTPResponse, store the cookie values
-def store_cookies(response):
-    cookies = response["Set-cookie:"]
+# -> String
+# Parse the csrftoken out of the cookie
+def parse_token():
+    global cookie_store
+    cookie = cookie_store["csrftoken"]  
+    key_value = cookie.split(";")[0]
+    return key_value.split("=")[1]
+
+# HTTPHeader -> 
+# Given an HTTPHeader, store the cookie values
+def store_cookies(header):
+    cookies = header["Set-cookie:"]
     for i in cookies:
         store_cookie(cookies[i])
 
@@ -122,17 +128,21 @@ def http_get(socket, host, path, cookies=""):
 
     return (header, body)
 
-# Wrap the socket to allow for easy sending
 # Socket -> [String -> ]
+# Wrap the socket to allow for easy sending
 def wrap_get(socket):
     return lambda path:
         return http_get(socket, FAKEBOOK_HOST, path, retrieve_cookies()))
 
+# Login
+# Socket ->
+def do_login(socket):
+    get = wrap_get(socket)
+    (header, login_page) = get(FAKEBOOK_HOME)
+    store_cookies(header)
+    token = parse_token()
 
-def do_login():
-    login_page = http_get(socket, FAKEBOOK_HOST, FAKEBOOK_HOME)
     print login_page
-
 
 # Entry point to the program
 def main():
@@ -149,7 +159,8 @@ def main():
     while len(to_visit) > 0:
         path = to_visit.popleft()
         (header, body) = get(path)
-        status = header["resp_code"]
+        store_cookies(header)
+        status = header["response_code"]
         if status == "200":
             parse_body(body)
         elif status == "301":
@@ -159,20 +170,6 @@ def main():
 
     # not necessary, but nice to close the socket
     close_socket(socket)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # These 2 lines allow us to import this file into another file 
 # and test individual components without running it
