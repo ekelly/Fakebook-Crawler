@@ -34,8 +34,8 @@ def close_socket(socket):
     socket.close()
 
 # Parse the socket data
-def parse_data(data):
-    return data.split(' ')
+def parse_http(data):
+    return data.split('\r\n\r\n\n', 1)
 
 # Receive data from the socket
 def recv_data(socket):
@@ -46,7 +46,7 @@ def send_data(socket, data):
     return socket.send(data)
 
 # Create a GET request for the specified url path
-def http_get(host, path):
+def http_get(host, path, cookies=[]):
     header =  "GET %s HTTP/1.1\n" % path
     header += "Host: %s\n" % host
     header += "\n"
@@ -63,10 +63,11 @@ def main():
     sent_bytes = send_data(socket, http_get(FAKEBOOK_HOST, FAKEBOOK_HOME))
 
     # Listen for data and respond appropriately
-    response = recv_data(socket)
+    response = parse_http(recv_data(socket))
     while response:
         print response
-        response = recv_data(socket)
+        break
+        response = parse_http(recv_data(socket))
 
     # not necessary, but nice to close the socket
     close_socket(socket)
