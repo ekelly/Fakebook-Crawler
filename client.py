@@ -122,12 +122,34 @@ def http_get(socket, host, path, cookies=""):
 
     return (header, body)
 
+# Convert map into form encoded key=value string
+def form_encode(form_data):
+    ret = ""
+    for key,value in form_data.items():
+        if len(ret):
+            ret += "&"
+        ret += "%s=%s"
+
+# Send a POST for the specified url path with the specified form data
+def http_post(socket, host, path, form_data, cookies=""):
+    encoded = form_encode(form_data)
+    header = "POST %s HTTP/1.1\n" % path
+    header += "Content-Type: application/x-www-form-urlencoded\n"
+    header += "Content-Length: %d\n" % len(encoded)
+    header += "\n"
+    header += encoded
+
 # Wrap the socket to allow for easy sending
 # Socket -> [String -> ]
 def wrap_get(socket):
     return lambda path:
         return http_get(socket, FAKEBOOK_HOST, path, retrieve_cookies()))
 
+# Wrap the socket to allow for easy sending
+# Socket -> [String -> ]
+def wrap_post(socket):
+    return lambda path,form_data:
+        return http_post(socket, FACEBOOK_HOST, path, form_data, retrieve_cookies())
 
 def do_login():
     login_page = http_get(socket, FAKEBOOK_HOST, FAKEBOOK_HOME)
