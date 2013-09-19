@@ -34,7 +34,7 @@ def close_socket(socket):
     socket.close()
 
 # Parse the socket data
-def parse_http(data):
+def split_http(data):
     return data.split('\r\n\r\n\n', 1)
 
 # Receive data from the socket
@@ -45,13 +45,32 @@ def recv_data(socket):
 def send_data(socket, data):
     return socket.send(data)
 
+# Turn a plain text header into a dictionary
+def parse_header(data):
+    header = {}
+    for line in data.split("\r\n"):
+        line = line.split(': ', 1)
+        if len(line) == 2:
+            if not line[0] in header:
+                header[line[0]] = list()
+            header[line[0]].append(line[1])
+        else:
+            header['response_code'] = line[0].split(' ')[1]
+    return header
+
 # Create a GET request for the specified url path
-def http_get(host, path, cookies=[]):
+def http_get(socket, host, path, cookies=[]):
     header =  "GET %s HTTP/1.1\n" % path
     header += "Host: %s\n" % host
     header += "\n"
-    print header
-    return header
+
+    sent_bytes = send_data(socket, header)
+
+    response = split_http(recv_data(socket))
+    header = parse_header(response[0])
+    body = response[1]
+
+    return (header, body)
 
 # Entry point to the program
 def main():
@@ -60,14 +79,11 @@ def main():
     # Create a connection to the server
     socket = open_socket(FAKEBOOK_HOST, 80, False)
     
-    sent_bytes = send_data(socket, http_get(FAKEBOOK_HOST, FAKEBOOK_HOME))
+
+    login_page = http_get(socket, FAKEBOOK_HOST, FAKEBOOK_HOME)
+    print login_page
 
     # Listen for data and respond appropriately
-    response = parse_http(recv_data(socket))
-    while response:
-        print response
-        break
-        response = parse_http(recv_data(socket))
 
     # not necessary, but nice to close the socket
     close_socket(socket)
