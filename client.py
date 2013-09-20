@@ -3,6 +3,7 @@
 from optparse import OptionParser 
 from collections import deque
 import socket
+import urllib
 
 # A HTTPResponse is a:
 # (HTTPHeader, HTML)
@@ -112,7 +113,7 @@ def http_get(socket, host, path, cookies=""):
     header =  "GET %s HTTP/1.1\n" % path
     header += "Host: %s\n" % host
     if cookies != "":
-        header += "Cookies: %s\n" % cookies 
+        header += "Cookie: %s\n" % cookies 
     header += "\n"
 
     sent_bytes = send_data(socket, header)
@@ -137,8 +138,10 @@ def form_encode(form_data):
 def http_post(socket, host, path, form_data, cookies=""):
     encoded = form_encode(form_data)
     header = "POST %s HTTP/1.1\n" % path
+    header += "Host: %s\n" % host
     header += "Content-Type: application/x-www-form-urlencoded\n"
     header += "Content-Length: %d\n" % len(encoded)
+    header += "Cookie: %s\n" % cookies
     header += "\n"
     header += encoded
 
@@ -172,12 +175,12 @@ def do_login(socket, username, password):
     store_cookies(header)
     token = cookie_store["csrftoken"]
     (header, body) = post(FAKEBOOK_LOGIN, {
-        "csrftoken": token, 
+        "csrfmiddlewaretoken": token, 
         "next": "/fakebook/", 
         "username": username, 
         "password": password 
     })
-    success = header["response_code"]["status"] != "500"
+    success = header["response_code"] != "500"
     if success:
         to_visit.append(header["location"])
     return success
