@@ -40,17 +40,17 @@ def parse_token():
 # HTTPHeader -> 
 # Given an HTTPHeader, store the cookie values
 def store_cookies(header):
-    cookies = header["Set-cookie:"]
-    for i in cookies:
-        store_cookie(cookies[i])
+    cookies = header["Set-Cookie"]
+    for cookie in cookies:
+        store_cookie(cookie)
 
 # Store a Fakebook cookie
 # String -> 
 def store_cookie(cookie):
     global cookie_store
-    if 'name=csrftoken' in cookie:
+    if 'csrftoken' in cookie:
         cookie_store["csrftoken"] = cookie
-    elif 'name=sessionid' in cookie:
+    elif 'sessionid' in cookie:
         cookie_store["sessionid"] = cookie
 
 # Retrieve the cookies
@@ -136,6 +136,7 @@ def form_encode(form_data):
         if len(ret):
             ret += "&"
         ret += "%s=%s" % (key.replace(" ", "+"),value.replace(" ", "+"))
+    return ret
 
 # Socket String String Dict String -> HTTPResponse
 # Send a POST for the specified url path with the specified form data
@@ -150,6 +151,7 @@ def http_post(socket, host, path, form_data, cookies=""):
     sent_bytes = send_data(socket, header)
 
     response = split_http(recv_data(socket))
+    import pdb; pdb.set_trace()
     header = parse_header(response[0])
     body = response[1]
 
@@ -163,7 +165,7 @@ def wrap_get(socket):
 # Socket -> [String Dict -> HTTPResponse]
 # Wrap the socket to allow for easy sending
 def wrap_post(socket):
-    return lambda path, form_data: http_post(socket, FACEBOOK_HOST, path, form_data, retrieve_cookies())
+    return lambda path, form_data: http_post(socket, FAKEBOOK_HOST, path, form_data, retrieve_cookies())
     
 # Login
 # Socket ->
@@ -193,7 +195,7 @@ def main():
     socket = open_socket(FAKEBOOK_HOST, 80)
     get = wrap_get(socket)    
 
-    if not do_login(socket, args["username"], args["password"]):
+    if not do_login(socket, args.username, args.password):
        print "Could not login" 
        exit(0)
     
