@@ -172,7 +172,6 @@ def do_login(socket, username, password):
     get = wrap_get(socket)
     post = wrap_post(socket)
     (header, login_page) = get(FAKEBOOK_HOME)
-    print login_page
     store_cookies(header)
     token = cookie_store["csrftoken"]
     (header, body) = post(FAKEBOOK_LOGIN, {
