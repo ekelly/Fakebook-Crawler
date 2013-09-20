@@ -31,8 +31,7 @@ cookie_store = {
 
 # -> String
 # Parse the csrftoken out of the cookie
-def parse_token():
-    global cookie_store
+def parse_token(cookie):
     key_value = cookie.split(";")[0]
     values = key_value.split("=")
     return (values[0], values[1])
