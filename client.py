@@ -148,7 +148,6 @@ def http_post(socket, host, path, form_data, cookies=""):
     sent_bytes = send_data(socket, header)
 
     response = split_http(recv_data(socket))
-    import pdb; pdb.set_trace()
     header = parse_header(response[0])
     body = response[1]
 
@@ -182,7 +181,7 @@ def do_login(socket, username, password):
     })
     success = header["response_code"] != "500"
     if success:
-        to_visit.append(header["Location"])
+        to_visit.append(header["Location"][0])
     return success
 
 # Entry point to the program
