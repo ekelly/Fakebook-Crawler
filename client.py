@@ -163,11 +163,12 @@ def wrap_post(socket):
 # Socket ->
 def do_login(socket, username, password):
     global to_visit
+    global cookie_store
     get = wrap_get(socket)
     post = wrap_post(socket)
     (header, login_page) = get(FAKEBOOK_HOME)
     store_cookies(header)
-    token = parse_token()
+    token = cookie_store["csrftoken"]
     (header, body) = post(FAKEBOOK_LOGIN, {
         "csrftoken": token, 
         "next": "/fakebook/", 
