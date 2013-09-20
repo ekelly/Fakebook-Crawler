@@ -33,25 +33,18 @@ cookie_store = {
 # Parse the csrftoken out of the cookie
 def parse_token():
     global cookie_store
-    cookie = cookie_store["csrftoken"]  
     key_value = cookie.split(";")[0]
-    return key_value.split("=")[1]
+    values = key_value.split("=")
+    return (values[0], values[1])
 
 # HTTPHeader -> 
 # Given an HTTPHeader, store the cookie values
 def store_cookies(header):
+    global cookie_store
     cookies = header["Set-Cookie"]
     for cookie in cookies:
-        store_cookie(cookie)
-
-# Store a Fakebook cookie
-# String -> 
-def store_cookie(cookie):
-    global cookie_store
-    if 'csrftoken' in cookie:
-        cookie_store["csrftoken"] = cookie
-    elif 'sessionid' in cookie:
-        cookie_store["sessionid"] = cookie
+        (name, value) = parse_token(cookie)
+        cookie_store[name] = value
 
 # Retrieve the cookies
 # -> String
