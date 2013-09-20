@@ -52,6 +52,8 @@ def retrieve_cookies():
     cookie_str = ""
     for i in cookie_store:
         if cookie_store[i]:
+            cookie_str += i
+            cookie_str += "="
             cookie_str += cookie_store[i]
             cookie_str += "; "
     return cookie_str
