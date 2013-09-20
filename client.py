@@ -133,7 +133,7 @@ def http_post(host, path, form_data, cookies):
     header = parse_header(response[0])
     body = response[1]
 
-    close_connection(socket)
+    close_socket(socket)
 
     return (header, body)
 
@@ -152,7 +152,7 @@ def http_get(host, path, cookies):
     header = parse_header(response[0])
     body = response[1]
 
-    close_connection(socket)
+    close_socket(socket)
 
     return (header, body)
 
@@ -177,7 +177,7 @@ def post(path, form_data):
     
 # Login
 # Socket ->
-def do_login(socket, username, password):
+def do_login(username, password):
     global to_visit
     global cookie_store
     (header, login_page) = get(FAKEBOOK_HOME)
@@ -190,7 +190,7 @@ def do_login(socket, username, password):
         "password": password 
     })
     success = header["response_code"] != "500"
-    if success and header["Location"] != None:
+    if success:
         to_visit.append(header["Location"][0])
     return success
 
@@ -203,7 +203,7 @@ def handle_redirect(header):
 def main():
     args = parse_input()
 
-    if not do_login(socket, args.username, args.password):
+    if not do_login(args.username, args.password):
        print "Could not login" 
        exit(0)
     
@@ -217,12 +217,9 @@ def main():
         if status == "200":
             parse_body(body)
         elif status == "301" or status == "302":
-            handle_redirect(header, body)
+            handle_redirect(header)
         elif status == "500":
             to_visit.append(path)
-
-    # not necessary, but nice to close the socket
-    close_socket(socket)
 
 # These 2 lines allow us to import this file into another file 
 # and test individual components without running it
