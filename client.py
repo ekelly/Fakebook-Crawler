@@ -3,7 +3,9 @@
 from optparse import OptionParser 
 from collections import deque
 import socket
-import urllib
+from HTMLParser import HTMLParser
+from urlparse import urlparse
+from urlparse import urljoin
 
 # A HTTPResponse is a:
 # (HTTPHeader, HTML)
@@ -199,6 +201,37 @@ def handle_redirect(header):
     global to_visit
     to_visit.append(header["Location"][0])
 
+# HTMLParser to find links and flags
+class FakebookHTMLParser(HTMLParser):
+    flag_mode = False
+    path = ""
+    def handle_starttag(self, tag, attrs):
+        if tag == "a":
+            for attr in attrs:
+                if attr[0] == "href":
+                    add_link(self.path, attr[1])
+        if tag == "h2" and ('class', 'secret_flag') in attrs:
+            self.flag_mode = True;
+    def handle_data(self, data):
+        self.flag_mode = False
+        if self.flag_mode and match("^FLAG: [a-zA-Z0-9]{64}$", data):
+            print data.replace("FLAG: ", "")
+
+# Parse the HTML for links and flags
+def parse_body(path, html):
+    parser = FakebookHTMLParser()
+    parser.path = path
+    parser.feed(html)
+
+def add_link(path, href):
+    url = urlparse(href)
+    if url.scheme != "http" and url.scheme != "":
+        return
+    if url.netloc == "":
+        url = urlparse(urljoin("http://" + path, href))
+    if url.netloc == FAKEBOOK_HOST and not url.path in visited:
+        to_visit.append(url.path)
+
 # Entry point to the program
 def main():
     args = parse_input()
@@ -215,7 +248,7 @@ def main():
         store_cookies(header)
         status = header["response_code"]
         if status == "200":
-            parse_body(body)
+            parse_body(path, body)
         elif status == "301" or status == "302":
             handle_redirect(header)
         elif status == "500":
