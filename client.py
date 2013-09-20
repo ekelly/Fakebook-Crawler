@@ -85,7 +85,7 @@ def close_socket(socket):
 
 # Parse the socket data
 def split_http(data):
-    return data.split('\r\n\r\n\n', 1)
+    return data.split('\r\n\r\n', 1)
 
 # Receive data from the socket
 def recv_data(socket):
@@ -182,7 +182,7 @@ def do_login(socket, username, password):
     })
     success = header["response_code"] != "500"
     if success:
-        to_visit.append(header["location"])
+        to_visit.append(header["Location"])
     return success
 
 # Entry point to the program
