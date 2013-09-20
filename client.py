@@ -184,6 +184,11 @@ def do_login(socket, username, password):
         to_visit.append(header["Location"][0])
     return success
 
+# Add the location from the redirect header to the queue
+def handle_redirect(header):
+    global to_visit
+    to_visit.append(header["Location"][0])
+
 # Entry point to the program
 def main():
     args = parse_input()
@@ -204,7 +209,7 @@ def main():
         status = header["response_code"]
         if status == "200":
             parse_body(body)
-        elif status == "301":
+        elif status == "301" or status == "302":
             handle_redirect(header, body)
         elif status == "500":
             to_visit.append(path)
