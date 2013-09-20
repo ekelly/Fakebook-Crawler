@@ -146,7 +146,7 @@ def http_get(host, path, cookies):
     header =  "GET %s HTTP/1.1\n" % path
     header += "Host: %s\n" % host
     if cookies != None:
-        header += "Cookie: %s\n" % cookies 
+        header += "Cookie: %s\n" % cookies
     header += "\n"
 
     sent_bytes = send_data(socket, header)
@@ -182,8 +182,10 @@ def post(path, form_data):
 # Socket ->
 def do_login(username, password):
     global to_visit
+    global visited
     global cookie_store
     (header, login_page) = get(FAKEBOOK_HOME)
+    visited.add(FAKEBOOK_HOME)
     store_cookies(header)
     token = cookie_store["csrftoken"]
     (header, body) = post(FAKEBOOK_LOGIN, {
@@ -194,13 +196,16 @@ def do_login(username, password):
     })
     success = header["response_code"] != "500"
     if success:
-        to_visit.append(header["Location"][0])
+        handle_redirect(header)
     return success
 
 # Add the location from the redirect header to the queue
 def handle_redirect(header):
     global to_visit
-    to_visit.append(header["Location"][0])
+    global visited
+    redirect_to = header["Location"][0]
+    if redirect_to not in visited:
+        to_visit.append(redirect_to)
 
 # HTMLParser to find links and flags
 class FakebookHTMLParser(HTMLParser):
@@ -225,12 +230,10 @@ def parse_body(path, html):
     parser.feed(html)
 
 def add_link(path, href):
+    global to_visit
+    global visited
     url = urlparse(href)
-    if url.scheme != "http" and url.scheme != "":
-        return
-    if url.netloc == "":
-        url = urlparse(urljoin("http://" + path, href))
-    if url.netloc == FAKEBOOK_HOST and not url.path in visited:
+    if url.path.startswith("/") and url.path not in visited:
         to_visit.append(url.path)
 
 # Entry point to the program
@@ -244,6 +247,8 @@ def main():
     while len(to_visit) > 0:
         path = to_visit.popleft()
         print path
+        if path == "/fakebook/":
+            import pdb; pdb.set_trace()
         visited.add(path)
         (header, body) = get(path)
         store_cookies(header)
