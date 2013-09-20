@@ -43,10 +43,11 @@ def parse_token(cookie):
 # Given an HTTPHeader, store the cookie values
 def store_cookies(header):
     global cookie_store
-    cookies = header["Set-Cookie"]
-    for cookie in cookies:
-        (name, value) = parse_token(cookie)
-        cookie_store[name] = value
+    if "Set-Cookie" in header:
+        cookies = header["Set-Cookie"]
+        for cookie in cookies:
+            (name, value) = parse_token(cookie)
+            cookie_store[name] = value
 
 # Retrieve the cookies
 # -> String
