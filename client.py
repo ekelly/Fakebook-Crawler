@@ -180,7 +180,7 @@ def do_login(socket, username, password):
         "password": password 
     })
     success = header["response_code"] != "500"
-    if success:
+    if success and header["Location"] != None:
         to_visit.append(header["Location"][0])
     return success
 
@@ -203,6 +203,7 @@ def main():
     
     while len(to_visit) > 0:
         path = to_visit.popleft()
+        print path
         visited.add(path)
         (header, body) = get(path)
         store_cookies(header)
