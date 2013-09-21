@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from re import match
 from optparse import OptionParser 
 from collections import deque
 import socket
@@ -20,6 +21,7 @@ from urlparse import urljoin
 
 to_visit = deque()
 visited = set()
+flags_found = 0
 
 # .append() and .popleft() [to_visit]
 
@@ -196,6 +198,7 @@ def do_login(username, password):
     })
     success = header["response_code"] != "500"
     if success:
+        store_cookies(header)
         handle_redirect(header)
     return success
 
@@ -219,9 +222,13 @@ class FakebookHTMLParser(HTMLParser):
         if tag == "h2" and ('class', 'secret_flag') in attrs:
             self.flag_mode = True;
     def handle_data(self, data):
-        self.flag_mode = False
+        global flags_found
         if self.flag_mode and match("^FLAG: [a-zA-Z0-9]{64}$", data):
             print data.replace("FLAG: ", "")
+            flags_found += 1
+            if flags_found == 5:
+                exit(0)
+
 
 # Parse the HTML for links and flags
 def parse_body(path, html):
@@ -238,7 +245,10 @@ def add_link(path, href):
 
 # Entry point to the program
 def main():
+    global visited
+    global to_visit
     args = parse_input()
+    print args.username
 
     if not do_login(args.username, args.password):
        print "Could not login" 
@@ -246,9 +256,8 @@ def main():
     
     while len(to_visit) > 0:
         path = to_visit.popleft()
-        print path
-        if path == "/fakebook/":
-            import pdb; pdb.set_trace()
+        if path in visited:
+            continue
         visited.add(path)
         (header, body) = get(path)
         store_cookies(header)

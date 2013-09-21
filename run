@@ -4,5 +4,5 @@ users=(000581357 000526758 000058418)
 passwords=(ZV0VSDKS 19JSAQ5M S33TK41K)
 
 python client.py ${users[0]} ${passwords[0]}
-#python client.py ${users[1]} ${passwords[1]}
-#python client.py ${users[2]} ${passwords[2]}
+python client.py ${users[1]} ${passwords[1]}
+python client.py ${users[2]} ${passwords[2]}
