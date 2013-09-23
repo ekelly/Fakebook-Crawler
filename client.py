@@ -224,10 +224,11 @@ class FakebookHTMLParser(HTMLParser):
     def handle_data(self, data):
         global flags_found
         if self.flag_mode and match("^FLAG: [a-zA-Z0-9]{64}$", data):
-            print data.replace("FLAG: ", "")
+            print data[6:]
             flags_found += 1
             if flags_found == 5:
                 exit(0)
+        self.flag_mode = False;
 
 
 # Parse the HTML for links and flags
@@ -248,7 +249,6 @@ def main():
     global visited
     global to_visit
     args = parse_input()
-    print args.username
 
     if not do_login(args.username, args.password):
        print "Could not login" 
