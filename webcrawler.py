@@ -223,10 +223,11 @@ class FakebookHTMLParser(HTMLParser):
     def handle_data(self, data):
         global flags_found
         if self.flag_mode and match("^FLAG: [a-zA-Z0-9]{64}$", data):
-            print data.replace("FLAG: ", "")
+            print data[6:]
             flags_found += 1
             if flags_found == 5:
                 exit(0)
+        self.flag_mode = False;
 
 
 # Parse the HTML for links and flags
