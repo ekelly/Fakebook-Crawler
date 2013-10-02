@@ -1,0 +1,17 @@
+Fakebook-Crawler
+================
+
+For this crawler, we realized that there would be four major pieces to develop:
+we had to implement some basic features of the HTTP protocol, reverse engineer
+the login system, perform a breadth-first-search of the network, and parse each
+page for links and secret keys. With three of us in the group, the work was
+easily compartmentalized and shared.
+
+Reverse engineering the login system proved to be the most complicated part - we
+failed to recognize that the cookies sent when the login page was retrieved were
+replaced upon successful login. After we realized that the 302 redirect also
+contained a new cookie, the rest of our code worked with few changes.
+
+We tested our code mostly through trial and error, stepping through functions
+with PDB to isolate any bugs. We also made many manual HTTP requests using a
+Chrome plugin, and used the Chrome inspector to understand the login process.

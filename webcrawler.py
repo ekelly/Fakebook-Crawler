@@ -6,7 +6,6 @@ from collections import deque
 import socket
 from HTMLParser import HTMLParser
 from urlparse import urlparse
-from urlparse import urljoin
 
 # A HTTPResponse is a:
 # (HTTPHeader, HTML)
@@ -248,7 +247,6 @@ def main():
     global visited
     global to_visit
     args = parse_input()
-    print args.username
 
     if not do_login(args.username, args.password):
        print "Could not login" 
